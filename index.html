@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListaCompra - Listas de compras colaborativas</title>
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body>
+    <!-- Header con navegación -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <i>🛒</i> ListaCompra
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#">Inicio</a></li>
+                    <li><a href="#how-it-works">Cómo funciona</a></li>
+                    <li><a href="#features">Características</a></li>
+                    <li><a href="#" id="login-btn" class="btn btn-outline">Iniciar Sesión</a></li>
+                    <li><a href="#" id="register-btn" class="btn btn-primary">Registrarse</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sección Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>Listas de Compra Colaborativas</h1>
+            <p>Organiza tus compras con familiares y amigos. Crea, comparte y edita listas en tiempo real.</p>
+            <a href="#" id="hero-register-btn" class="btn btn-primary">Comenzar ahora</a>
+        </div>
+    </section>
+
+    <!-- Cómo funciona -->
+    <section id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">¿Cómo funciona?</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Crea tu lista</h3>
+                    <p>Regístrate y crea tu primera lista de compras en segundos.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Invita a otros</h3>
+                    <p>Comparte tu lista con familiares, amigos o compañeros de piso.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Actualizaciones en tiempo real</h3>
+                    <p>Ve los cambios instantáneamente mientras todos colaboran.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Características -->
+    <section id="features" style="background-color: #E8F5E9;">
+        <div class="container">
+            <h2 class="section-title">Características principales</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Marca items comprados</h3>
+                    <p>Marca los productos que ya han sido comprados para evitar duplicados.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Chat integrado</h3>
+                    <p>Comunícate con tu grupo a través del chat integrado en cada lista.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Acceso multiplataforma</h3>
+                    <p>Accede a tus listas desde cualquier dispositivo con internet.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Listas de ejemplo (solo para usuarios logueados) -->
+    <section id="my-lists" style="display: none;">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Mis listas</h2>
+                <button id="create-list-btn" class="btn btn-primary">Crear nueva lista</button>
+            </div>
+            <div class="lists-grid">
+                <!-- Las listas se cargarán dinámicamente con JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ListaCompra</h3>
+                    <p>La mejor manera de organizar tus compras de forma colaborativa.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces útiles</h3>
+                    <a href="#">Acerca de</a>
+                    <a href="#">Términos y condiciones</a>
+                    <a href="#">Política de privacidad</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <a href="mailto:soporte@listacompra.com">soporte@listacompra.com</a>
+                    <a href="#">Soporte técnico</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 ListaCompra - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Registro -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear cuenta</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-name">Nombre completo</label>
+                    <input type="text" id="register-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Correo electrónico</label>
+                    <input type="email" id="register-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Contraseña</label>
+                    <input type="password" id="register-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirmar contraseña</label>
+                    <input type="password" id="register-confirm-password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Registrarse</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px;">
+                ¿Ya tienes cuenta? <a href="#" id="go-to-login">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Iniciar sesión</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Correo electrónico</label>
+                    <input type="email" id="login-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Iniciar sesión</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px;">
+                ¿No tienes cuenta? <a href="#" id="go-to-register">Regístrate</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal para crear lista -->
+    <div id="create-list-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear nueva lista</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="create-list-form">
+                <div class="form-group">
+                    <label for="list-name">Nombre de la lista</label>
+                    <input type="text" id="list-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="list-description">Descripción (opcional)</label>
+                    <textarea id="list-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="list-collaborators">Agregar colaboradores (separar por comas)</label>
+                    <input type="text" id="list-collaborators" class="form-control"
+                        placeholder="email1@ejemplo.com, email2@ejemplo.com">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Crear lista</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts/script.js"></script>
+</body>
+
+</html>
