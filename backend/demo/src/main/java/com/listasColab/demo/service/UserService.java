@@ -1,6 +1,5 @@
 package com.listasColab.demo.service;
 
-import com.listasColab.*;
 import com.listasColab.demo.model.User;
 import com.listasColab.demo.repository.UserRepository;
 
