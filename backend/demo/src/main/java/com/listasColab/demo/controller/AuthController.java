@@ -1,12 +1,6 @@
 package com.listasColab.demo.controller;
 
-import com.listacompra.dto.JwtResponse;
-import com.listacompra.dto.LoginRequest;
-import com.listacompra.dto.SignupRequest;
-import com.listacompra.model.User;
-import com.listacompra.security.JwtUtils;
-import com.listacompra.security.UserPrincipal;
-import com.listacompra.service.UserService;
+import com.listasColab.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
