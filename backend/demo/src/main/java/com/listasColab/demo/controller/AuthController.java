@@ -1,7 +1,13 @@
 package com.listasColab.demo.controller;
 
 import com.listasColab.*;
+import com.listasColab.demo.dto.JwtResponse;
+import com.listasColab.demo.dto.LoginRequest;
+import com.listasColab.demo.dto.SignupRequest;
 import com.listasColab.demo.model.User;
+import com.listasColab.demo.security.JwtUtils;
+import com.listasColab.demo.security.UserPrincipal;
+import com.listasColab.demo.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +45,7 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getName(),
-                userDetails.getEmail()));
+                userDetails.getEmail(), null));
     }
 
     @PostMapping("/signup")
