@@ -1,6 +1,6 @@
 package com.listasColab.demo.security;
 
-import com.listasColab.demo.model.user;
+import com.listasColab.demo.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

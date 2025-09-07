@@ -1,27 +1,17 @@
 package com.listasColab.demo.model;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-
 import jakarta.persistence.*;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-//import jakarta.validation.constraints.Email; lo comento pero tal vez en el futuro lo cambie
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +23,7 @@ public class User {
 
     @NotBlank
     @Size(max = 50)
+    @Email
     private String email;
 
     @NotBlank
@@ -42,23 +33,22 @@ public class User {
     private LocalDateTime createdAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_lists", joinColumns = @JoinColumn(name = "list_id"))
-    private Set<ShoppingList> lists = new HashSet<>();
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
 
+    // Constructores, getters y setters
     public User() {
         this.createdAt = LocalDateTime.now();
     }
 
-    public User(Long id, @NotBlank @Size(max = 20) String name, @NotBlank @Size(max = 50) String email,
-            @NotBlank @Size(max = 120) String password, LocalDateTime createdAt, Set<ShoppingList> lists) {
-        this.id = id;
+    public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.createdAt = createdAt;
-        this.lists = lists;
+        this.createdAt = LocalDateTime.now();
     }
 
+    // Getters y setters para todos los campos
     public Long getId() {
         return id;
     }
@@ -99,12 +89,12 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public Set<ShoppingList> getLists() {
-        return lists;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setLists(Set<ShoppingList> lists) {
-        this.lists = lists;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     @Override
@@ -116,7 +106,7 @@ public class User {
         result = prime * result + ((email == null) ? 0 : email.hashCode());
         result = prime * result + ((password == null) ? 0 : password.hashCode());
         result = prime * result + ((createdAt == null) ? 0 : createdAt.hashCode());
-        result = prime * result + ((lists == null) ? 0 : lists.hashCode());
+        result = prime * result + ((roles == null) ? 0 : roles.hashCode());
         return result;
     }
 
@@ -154,10 +144,10 @@ public class User {
                 return false;
         } else if (!createdAt.equals(other.createdAt))
             return false;
-        if (lists == null) {
-            if (other.lists != null)
+        if (roles == null) {
+            if (other.roles != null)
                 return false;
-        } else if (!lists.equals(other.lists))
+        } else if (!roles.equals(other.roles))
             return false;
         return true;
     }
