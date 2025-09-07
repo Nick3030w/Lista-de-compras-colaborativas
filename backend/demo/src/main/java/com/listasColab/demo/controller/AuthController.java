@@ -1,6 +1,8 @@
 package com.listasColab.demo.controller;
 
 import com.listasColab.*;
+import com.listasColab.demo.model.User;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
