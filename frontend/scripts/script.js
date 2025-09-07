@@ -1,80 +1,125 @@
-// Datos de ejemplo para simular la aplicación
-let users = JSON.parse(localStorage.getItem('users')) || [];
+// URL base de tu API - Cambia el puerto si es necesario
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Almacenamiento de token y usuario
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-let lists = JSON.parse(localStorage.getItem('lists')) || [];
+let jwtToken = localStorage.getItem('jwtToken') || null;
 
-// Elementos del DOM
-const registerModal = document.getElementById('register-modal');
-const loginModal = document.getElementById('login-modal');
-const createListModal = document.getElementById('create-list-modal');
-const registerBtn = document.getElementById('register-btn');
-const loginBtn = document.getElementById('login-btn');
-const heroRegisterBtn = document.getElementById('hero-register-btn');
-const goToLoginBtn = document.getElementById('go-to-login');
-const goToRegisterBtn = document.getElementById('go-to-register');
-const closeModalButtons = document.querySelectorAll('.close-modal');
-const registerForm = document.getElementById('register-form');
-const loginForm = document.getElementById('login-form');
-const createListForm = document.getElementById('create-list-form');
-const createListBtn = document.getElementById('create-list-btn');
-const myListsSection = document.getElementById('my-lists');
-const listsGrid = document.querySelector('.lists-grid');
-let navLinks = document.querySelector('.nav-links');
+// Función para hacer requests autenticados
+async function makeAuthenticatedRequest(url, options = {}) {
+    if (!jwtToken) {
+        throw new Error('No authentication token found');
+    }
 
-// Mostrar u ocultar modales
-function showModal(modal) {
-    modal.style.display = 'flex';
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}`
+        }
+    };
+
+    const mergedOptions = { ...defaultOptions, ...options };
+    const response = await fetch(`${API_BASE_URL}${url}`, mergedOptions);
+
+    if (response.status === 401) {
+        // Token expirado o inválido
+        logout();
+        throw new Error('Authentication failed');
+    }
+
+    return response;
 }
 
-function hideModal(modal) {
-    modal.style.display = 'none';
+// Función para registrar usuario
+async function registerUser(userData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error);
+        }
+
+        return await response.text();
+    } catch (error) {
+        throw new Error(error.message);
+    }
 }
 
-// Event listeners para los botones de registro/login
-registerBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    showModal(registerModal);
-});
+// Función para iniciar sesión
+async function loginUser(loginData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(loginData)
+        });
 
-loginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    showModal(loginModal);
-});
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(error);
+        }
 
-heroRegisterBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    showModal(registerModal);
-});
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
 
-goToLoginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    hideModal(registerModal);
-    showModal(loginModal);
-});
+// Función para obtener las listas del usuario
+async function getUserLists() {
+    try {
+        const response = await makeAuthenticatedRequest('/lists');
+        if (!response.ok) {
+            throw new Error('Failed to fetch lists');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching lists:', error);
+        throw error;
+    }
+}
 
-goToRegisterBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    hideModal(loginModal);
-    showModal(registerModal);
-});
+// Función para crear una nueva lista
+async function createShoppingList(listData) {
+    try {
+        const response = await makeAuthenticatedRequest('/lists', {
+            method: 'POST',
+            body: JSON.stringify(listData)
+        });
 
-closeModalButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        hideModal(registerModal);
-        hideModal(loginModal);
-        hideModal(createListModal);
-    });
-});
+        if (!response.ok) {
+            throw new Error('Failed to create list');
+        }
 
-// Cerrar modal al hacer clic fuera del contenido
-window.addEventListener('click', (e) => {
-    if (e.target === registerModal) hideModal(registerModal);
-    if (e.target === loginModal) hideModal(loginModal);
-    if (e.target === createListModal) hideModal(createListModal);
-});
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating list:', error);
+        throw error;
+    }
+}
 
-// Registro de usuario
-registerForm.addEventListener('submit', (e) => {
+// Función para cerrar sesión
+function logout() {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('currentUser');
+    jwtToken = null;
+    currentUser = null;
+    updateUIForAuthState();
+    alert('Sesión cerrada correctamente');
+}
+
+// Modificar el event listener del formulario de registro
+registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const name = document.getElementById('register-name').value;
@@ -87,193 +132,216 @@ registerForm.addEventListener('submit', (e) => {
         return;
     }
 
-    // Verificar si el usuario ya existe
-    if (users.find(user => user.email === email)) {
-        alert('Este correo electrónico ya está registrado');
-        return;
+    try {
+        // 1. Registrar usuario
+        await registerUser({ name, email, password });
+
+        // 2. Iniciar sesión automáticamente
+        const loginData = await loginUser({ email, password });
+
+        // 3. Guardar token y datos de usuario
+        jwtToken = loginData.token;
+        currentUser = {
+            id: loginData.id,
+            name: loginData.name,
+            email: loginData.email
+        };
+
+        localStorage.setItem('jwtToken', jwtToken);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        alert('Registro exitoso. ¡Bienvenido/a!');
+        hideModal(registerModal);
+        updateUIForAuthState();
+
+    } catch (error) {
+        alert('Error: ' + error.message);
     }
-
-    // Crear nuevo usuario
-    const newUser = {
-        id: Date.now().toString(),
-        name,
-        email,
-        password // En una app real, esto debería estar encriptado
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // Iniciar sesión automáticamente
-    currentUser = newUser;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-    alert('Registro exitoso. ¡Bienvenido/a!');
-    hideModal(registerModal);
-    updateUIForAuthState();
 });
 
-// Inicio de sesión
-loginForm.addEventListener('submit', (e) => {
+// Modificar el event listener del formulario de login
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
 
-    const user = users.find(u => u.email === email && u.password === password);
+    try {
+        const loginData = await loginUser({ email, password });
 
-    if (!user) {
-        alert('Credenciales incorrectas');
-        return;
-    }
-
-    currentUser = user;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-    alert(`Bienvenido/a de nuevo, ${user.name}`);
-    hideModal(loginModal);
-    updateUIForAuthState();
-});
-
-// Crear nueva lista
-if (createListBtn) {
-    createListBtn.addEventListener('click', () => {
-        if (!currentUser) {
-            showModal(loginModal);
-            return;
-        }
-        showModal(createListModal);
-    });
-}
-
-if (createListForm) {
-    createListForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById('list-name').value;
-        const description = document.getElementById('list-description').value;
-        const collaboratorsInput = document.getElementById('list-collaborators').value;
-
-        const collaborators = collaboratorsInput
-            ? collaboratorsInput.split(',').map(email => email.trim())
-            : [];
-
-        // Añadir al usuario actual como colaborador
-        if (!collaborators.includes(currentUser.email)) {
-            collaborators.push(currentUser.email);
-        }
-
-        const newList = {
-            id: Date.now().toString(),
-            name,
-            description,
-            owner: currentUser.id,
-            collaborators,
-            items: [],
-            createdAt: new Date().toISOString()
+        jwtToken = loginData.token;
+        currentUser = {
+            id: loginData.id,
+            name: loginData.name,
+            email: loginData.email
         };
 
-        lists.push(newList);
-        localStorage.setsetItem('lists', JSON.stringify(lists));
+        localStorage.setItem('jwtToken', jwtToken);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+        alert(`Bienvenido/a de nuevo, ${currentUser.name}`);
+        hideModal(loginModal);
+        updateUIForAuthState();
+
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+});
+
+// Modificar el event listener para crear lista
+createListForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('list-name').value;
+    const description = document.getElementById('list-description').value;
+    const collaboratorsInput = document.getElementById('list-collaborators').value;
+
+    try {
+        const listData = {
+            name,
+            description,
+            collaborators: collaboratorsInput ? collaboratorsInput.split(',').map(email => email.trim()) : []
+        };
+
+        await createShoppingList(listData);
 
         alert('Lista creada exitosamente');
         hideModal(createListModal);
         renderUserLists();
-    });
-}
 
-// Renderizar las listas del usuario
-function renderUserLists() {
+    } catch (error) {
+        alert('Error creando lista: ' + error.message);
+    }
+});
+
+// Actualizar la función para renderizar listas
+async function renderUserLists() {
     if (!currentUser) return;
 
-    const userLists = lists.filter(list =>
-        list.owner === currentUser.id ||
-        list.collaborators.includes(currentUser.email)
-    );
+    try {
+        const lists = await getUserLists();
 
-    listsGrid.innerHTML = '';
+        listsGrid.innerHTML = '';
 
-    if (userLists.length === 0) {
+        if (lists.length === 0) {
+            listsGrid.innerHTML = `
+                <div class="no-lists">
+                    <p>No tienes listas aún. ¡Crea una para comenzar!</p>
+                </div>
+            `;
+            return;
+        }
+
+        lists.forEach(list => {
+            const listElement = document.createElement('div');
+            listElement.className = 'list-card';
+            listElement.innerHTML = `
+                <h3>${list.name}</h3>
+                <div class="list-meta">
+                    <p>${list.description || 'Sin descripción'}</p>
+                    <p>Creada: ${new Date(list.createdAt).toLocaleDateString()}</p>
+                    <p>Items: ${list.items ? list.items.length : 0}</p>
+                    <p>Colaboradores: ${list.collaborators ? list.collaborators.length : 0}</p>
+                </div>
+                <div class="list-actions">
+                    <button class="btn btn-outline" onclick="openList(${list.id})">Abrir</button>
+                    <button class="btn btn-primary" onclick="shareList(${list.id})">Compartir</button>
+                </div>
+            `;
+            listsGrid.appendChild(listElement);
+        });
+    } catch (error) {
+        console.error('Error rendering lists:', error);
         listsGrid.innerHTML = `
             <div class="no-lists">
-                <p>No tienes listas aún. ¡Crea una para comenzar!</p>
+                <p>Error cargando las listas. Intenta recargar la página.</p>
             </div>
         `;
-        return;
     }
-
-    userLists.forEach(list => {
-        const listElement = document.createElement('div');
-        listElement.className = 'list-card';
-        listElement.innerHTML = `
-            <h3>${list.name}</h3>
-            <div class="list-meta">
-                <p>${list.description || 'Sin descripción'}</p>
-                <p>Creada: ${new Date(list.createdAt).toLocaleDateString()}</p>
-                <p>Items: ${list.items.length}</p>
-                <p>Colaboradores: ${list.collaborators.length}</p>
-            </div>
-            <div class="list-actions">
-                <button class="btn btn-outline">Abrir</button>
-                <button class="btn btn-primary">Compartir</button>
-            </div>
-        `;
-        listsGrid.appendChild(listElement);
-    });
 }
 
-// Actualizar la UI según el estado de autenticación
+// Función para abrir una lista
+function openList(listId) {
+    // Aquí implementarás la lógica para abrir y editar una lista específica
+    alert(`Abriendo lista con ID: ${listId}`);
+    // window.location.href = `list.html?id=${listId}`;
+}
+
+// Función para compartir una lista
+function shareList(listId) {
+    // Aquí implementarás la lógica para compartir una lista
+    alert(`Compartiendo lista con ID: ${listId}`);
+}
+
+// Actualizar la función updateUIForAuthState
 function updateUIForAuthState() {
-    if (currentUser) {
-        // Cambiar botones de login/register a perfil y cerrar sesión
-        navLinks.innerHTML = `
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#how-it-works">Cómo funciona</a></li>
-            <li><a href="#features">Características</a></li>
-            <li><a href="#" id="profile-btn">Hola, ${currentUser.name}</a></li>
-            <li><a href="#" id="logout-btn" class="btn btn-outline">Cerrar sesión</a></li>
-        `;
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const myListsSection = document.getElementById('my-lists');
+    const navLinks = document.querySelector('.nav-links');
 
-        // Mostrar sección de listas
-        myListsSection.style.display = 'block';
-        renderUserLists();
+    if (currentUser && jwtToken) {
+        // Usuario autenticado
+        if (navLinks) {
+            navLinks.innerHTML = `
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#how-it-works">Cómo funciona</a></li>
+                <li><a href="#features">Características</a></li>
+                <li><a href="#" id="profile-btn">Hola, ${currentUser.name}</a></li>
+                <li><a href="#" id="logout-btn" class="btn btn-outline">Cerrar sesión</a></li>
+            `;
 
-        // Añadir event listeners a los nuevos botones
-        document.getElementById('logout-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            updateUIForAuthState();
-            alert('Sesión cerrada correctamente');
-        });
+            document.getElementById('logout-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+        }
+
+        if (myListsSection) {
+            myListsSection.style.display = 'block';
+            renderUserLists();
+        }
+
     } else {
-        // Restaurar botones de login/register
-        navLinks.innerHTML = `
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#how-it-works">Cómo funciona</a></li>
-            <li><a href="#features">Características</a></li>
-            <li><a href="#" id="login-btn" class="btn btn-outline">Iniciar Sesión</a></li>
-            <li><a href="#" id="register-btn" class="btn btn-primary">Registrarse</a></li>
-        `;
+        // Usuario no autenticado
+        if (navLinks) {
+            navLinks.innerHTML = `
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#how-it-works">Cómo funciona</a></li>
+                <li><a href="#features">Características</a></li>
+                <li><a href="#" id="login-btn" class="btn btn-outline">Iniciar Sesión</a></li>
+                <li><a href="#" id="register-btn" class="btn btn-primary">Registrarse</a></li>
+            `;
 
-        // Ocultar sección de listas
-        myListsSection.style.display = 'none';
+            // Re-asignar event listeners
+            document.getElementById('login-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                showModal(loginModal);
+            });
 
-        // Reasignar event listeners a los botones de login/register
-        document.getElementById('login-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            showModal(loginModal);
-        });
+            document.getElementById('register-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                showModal(registerModal);
+            });
+        }
 
-        document.getElementById('register-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            showModal(registerModal);
-        });
+        if (myListsSection) {
+            myListsSection.style.display = 'none';
+        }
     }
 }
 
 // Inicializar la aplicación
 function initApp() {
+    // Verificar si hay un token guardado
+    const savedToken = localStorage.getItem('jwtToken');
+    const savedUser = localStorage.getItem('currentUser');
+
+    if (savedToken && savedUser) {
+        jwtToken = savedToken;
+        currentUser = JSON.parse(savedUser);
+    }
+
     updateUIForAuthState();
 }
 
